@@ -18,8 +18,11 @@
                   </div>
                   <div class="cmdInputWrapper">
                     <!--<input type="text" @keyup.enter="submit(index)" class="cmdInput" ref="cmdInput" v-focus>-->
-                    <!--<textarea class="cmdInput" ref="cmdInput" v-focus></textarea>-->
-                    <div contenteditable="true" class="cmdInput" ref="cmdInput" v-focus></div>
+                    <!--<textarea class="cmdInput" ref="cmdInput" v-focus style='overflow-y: hidden;height:20px' @onpropertychange="propertychange" @oninput="changeHeight"></textarea>-->
+                    <!--<div contenteditable="true" class="cmdInput" ref="cmdInput" v-focus></div>-->
+                    <textarea name="textarea" id="textarea" style='overflow-y: hidden;height:20px;width: 100%;' onpropertychange="this.style.height = this.scrollHeight + 'px';" oninput="this.style.height = this.scrollHeight + 'px';">我是内容
+真的不会随内容变化吗？
+其实不是的，只是楼主没有动脑筋而已</textarea>
                   </div>
                 </div>
                 <div class="response" ref="response"></div>
@@ -74,10 +77,13 @@
         return this.isShow ? 'active icon-circle-right' : 'icon-circle-left'
       }
     },
-//    created() {
+    mounted() {
+      console.log(this.$refs.cmdInput)
+//      this.$refs.cmdInput.clientHeight = this.$refs.cmdInput.scrollHeight + 10 + 'px'
+      document.getElementById('textarea').style.height = document.getElementById('textarea').scrollHeight + 10 + 'px'
 //      this.probeType = 3
 //      this.listenScroll = true
-//    },
+    },
     methods: {
       submit: function (index) {
         let cmdGroup = {}
@@ -86,6 +92,12 @@
         console.log(this.request)
         this.$refs.response[0].innerHTML = this.request
         this.groups.push(cmdGroup)
+      },
+      changeHeight() {
+        this.$refs.cmdInput.clientHeight = this.$refs.cmdInput.scrollHeight + 'px'
+      },
+      propertychange() {
+        this.$refs.cmdInput.clientHeight = this.$refs.cmdInput.scrollHeight + 'px'
       },
       refresh(maxScrollY) {
         console.log('maxScrollY=======  ' + maxScrollY)
@@ -106,9 +118,9 @@
     watch: {
       request(newVal) {
         console.log(newVal)
-//        if (newVal.length > 60) {
-//          window.alert('da yu 60 le')
-//        }
+        if (newVal.length > 60) {
+          window.alert('da yu 60 le')
+        }
 //        this.$http.get('/someUrl', {requ: newVal}).then((response) => {
 //          this.$refs.response[index].innerHTML = response.data
 //        })
@@ -119,8 +131,8 @@
       counter(index) {
         let cmdGroup = {}
         let currIndex = index - 1
-        this.$refs.cmdInput[currIndex].removeAttribute('contenteditable')
-        this.request = this.$refs.cmdInput[currIndex].innerText
+//        this.$refs.cmdInput[currIndex].removeAttribute('contenteditable')
+        this.request = this.$refs.cmdInput[currIndex].value
         this.$refs.response[currIndex].innerText = this.request
         this.groups.push(cmdGroup)
       }
@@ -202,6 +214,7 @@
                 overflow-x: hidden;
                 overflow-y: auto;
                 _overflow-y: visible;
+                border: 1px solid #ffbe00
     .commandInfoWrapper
       position: fixed
       width: 150px
