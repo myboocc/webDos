@@ -6,6 +6,7 @@ import Dos from 'components/dos/dos'
 Vue.use(Router)
 
 export default new Router({
+  // base: '/webDos/',
   routes: [
     {
       path: '/',
