@@ -2,13 +2,13 @@
   <transition name="slide">
     <div class="dos">
       <div class="topWrapper">
-        <i class="icon icon-play2" @click="counter += 1"></i>
+        <i class="icon icon-play2" @click="addArrow"></i>
         <i class="icon icon-reply"></i>
-        <span class="send" @click="counter += 1">发送</span>
+        <span class="send" @click="submit">发送</span>
         <i class="icon floatRight slideInfoBtn" :class="toggleInfoBtn" @click="toggleShowInfo"></i>
       </div>
       <div class="commandWrapper">
-        <div ref="scroll" class="command" :pullup="pullup" @scrollToEnd="refresh">
+        <div ref="scroll" class="command">
           <div>
             <div class="wrapperHook" ref="wrapperHook">
               <div class="item" v-for="(group,index) in groups">
@@ -17,9 +17,7 @@
                     <span>></span>
                   </div>
                   <div class="cmdInputWrapper">
-                    <!--<input type="text" @keyup.enter="submit(index)" class="cmdInput" ref="cmdInput" v-focus>-->
-                    <!--<textarea class="cmdInput" ref="cmdInput" v-focus></textarea>-->
-                    <div contenteditable="true" class="cmdInput" ref="cmdInput" v-focus></div>
+                    <textarea class="cmdInput" ref="cmdInput" v-focus></textarea>
                   </div>
                 </div>
                 <div class="response" ref="response"></div>
@@ -44,29 +42,33 @@
             </ul>
           </div>
           <div class="btns">
-            <span class="info-btn clear">清屏</span>
-            <span class="info-btn zhuxiao">注销</span>
+            <span class="info-btn clear" @click="clearScreen">清屏</span>
+            <span class="info-btn zhuxiao" @click="logOut">注销</span>
           </div>
         </div>
       </transition>
+      <Info :text="textInfo" ref="logoutWindow" confirmBtnText="确定" @confirm="confirm"></Info>
     </div>
   </transition>
 </template>
 
 <script type="text/ecmascript-6">
-  import Scroll from 'base/scroll/scroll'
+  import autosize from 'autosize'
+  import Info from 'base/info/info'
+
+  const resp1 = '1-  GS7977  DS# YA BA HA KA LA MS XQ VQ NQ WQ  TSNKIX 0835   1205   32I 0 B  E'
+  const ERROR_RESP = '指令错误'
 
   export default {
     data() {
       return {
-        message: 'Hello Vue!',
         groups: [{}],
         request: '',
-        pullup: true,
         isShow: false,
         response: '',
         selectType: 0,
-        counter: 0
+        counter: 0,
+        textInfo: ''
       }
     },
     computed: {
@@ -74,26 +76,28 @@
         return this.isShow ? 'active icon-circle-right' : 'icon-circle-left'
       }
     },
-//    created() {
-//      this.probeType = 3
-//      this.listenScroll = true
-//    },
+    mounted() {
+      autosize(document.querySelectorAll('textarea'))
+    },
     methods: {
-      submit: function (index) {
+      submit: function () {
         let cmdGroup = {}
-//        this.$refs.cmdInput[index].readOnly = true
-        this.request = this.$refs.cmdInput[0].innerHTML
-        console.log(this.request)
-        this.$refs.response[0].innerHTML = this.request
-        this.groups.push(cmdGroup)
-      },
-      refresh(maxScrollY) {
-        console.log('maxScrollY=======  ' + maxScrollY)
-        let contentHeight = this.$refs.wrapperHook.clientHeight
-        console.log('contentHeight=======  ' + contentHeight)
-        if (contentHeight > maxScrollY) {
-          this.$refs.scroll.refresh()
-          console.log('refresh。。。')
+        let currIndex = this.counter
+        if (currIndex >= 0) {
+          let input = this.$refs.cmdInput[currIndex].value
+          if (input.trim() !== '') {
+            input === 'admin' ? this.request = resp1 : this.request = ERROR_RESP
+          } else {
+            this.request = '指令不能为空'
+          }
+          this.$refs.cmdInput[currIndex].readOnly = true
+          this.$refs.response[currIndex].innerText = this.request
+          this.groups.push(cmdGroup)
+          this.counter ++
+          this.$nextTick(() => {
+            let ta = autosize(document.querySelectorAll('textarea'))
+            autosize.update(ta)
+          })
         }
       },
       toggleShowInfo() {
@@ -101,32 +105,31 @@
       },
       selectTab(type) {
         this.selectType = type
-      }
-    },
-    watch: {
-      request(newVal) {
-        console.log(newVal)
-//        if (newVal.length > 60) {
-//          window.alert('da yu 60 le')
-//        }
-//        this.$http.get('/someUrl', {requ: newVal}).then((response) => {
-//          this.$refs.response[index].innerHTML = response.data
-//        })
-//          .catch(function (response) {
-//            console.log(response)
-//          })
       },
-      counter(index) {
-        let cmdGroup = {}
-        let currIndex = index - 1
-        this.$refs.cmdInput[currIndex].removeAttribute('contenteditable')
-        this.request = this.$refs.cmdInput[currIndex].innerText
-        this.$refs.response[currIndex].innerText = this.request
-        this.groups.push(cmdGroup)
+      clearScreen() {
+        this.counter = 0
+        this.groups = [{}]
+        this.request = ''
+        this.$refs.cmdInput[0].readOnly = false
+        this.$refs.cmdInput[0].value = ''
+        this.$refs.response[0].innerText = ''
+      },
+      logOut() {
+        this.textInfo = '确定要退出吗？'
+        this.$refs.logoutWindow.show()
+      },
+      confirm() {
+        this.$router.push({
+          path: '/login'
+        })
+      },
+      addArrow() { // 添加箭头
+        this.counter += 1
+        this.groups.push({})
       }
     },
     components: {
-      Scroll
+      Info
     }
   }
 </script>
@@ -153,7 +156,6 @@
       height: 30px
       top: 0
       left: 0
-      /*border: 1px solid #b5d592*/
       padding: 2px 10px
       line-height :30px
       .icon
@@ -189,7 +191,7 @@
             .cmdInputWrapper
               flex: 1
               .cmdInput
-                width: 94%
+                width: 95%
                 background-color: transparent
                 border: 0
                 color: #fff
@@ -202,6 +204,7 @@
                 overflow-x: hidden;
                 overflow-y: auto;
                 _overflow-y: visible;
+                resize: none
     .commandInfoWrapper
       position: fixed
       width: 150px
